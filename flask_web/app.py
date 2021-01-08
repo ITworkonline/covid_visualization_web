@@ -12,23 +12,26 @@ def find_top_confirmed():
     cdf = by_country.nlargest(15, 'Confirmed')[['Confirmed']]
     return cdf
 
-def circle_maker(x):
-      folium.Circle(location = [x[0], x[1]],
-                radius = float(x[2])*0.5,
-                popup = '{}\nConfirmed Cases: {}'.format(x[3], x[2])).add_to(m) 
-corona_df[['Lat', 'Long_', 'Confirmed', 'Combined_Key']].dropna(subset = ['Lat', 'Long_']).apply(lambda x: circle_maker(x), axis = 1)
-
-cdf = find_top_confirmed().to_html()
-
 m = folium.Map(location = [39.992, -105.190],
            tiles = 'Stamen toner',
            zoom_start = 8)
+def circle_maker(x):
+      folium.Circle(location = [x[0], x[1]],
+                radius = float(x[2])*0.5,
+                color = 'red',
+                popup = f'<h5 style="backgroundcolor:black;fontcolor:white">{x[3]}</h5>\n<strong>Confirmed</strong>:  {x[2]}', fill = True).add_to(m)
+corona_df[['Lat', 'Long_', 'Confirmed', 'Combined_Key']].dropna(subset = ['Lat', 'Long_']).apply(lambda x: circle_maker(x), axis = 1)
+
+cdf = find_top_confirmed()
+pairs = [(country, confirmed) for country, confirmed in zip(cdf.index,cdf['Confirmed'])]
+
+
 html_map = m._repr_html_()
 
 
 @app.route('/')
 def home():
-    return render_template('home.html', table = cdf, c_map = html_map)
+    return render_template('home.html', table = cdf, c_map = html_map, pairs = pairs)
 
 
 if __name__=='__main__':
